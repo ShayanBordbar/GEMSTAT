@@ -223,3 +223,58 @@ void Weighted_ObjFunc_Mixin::set_weights(Matrix *in_weights){
         }
     }
 }
+
+
+
+double GroupedSoftMin_ObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
+  const ExprPar* par){
+
+    //FOR DEBUG
+    cerr << "HELLO FROM THE grouped soft min objective" << endl;
+    assert(ground_truth.size() == group_mapping.size());
+
+    vector< double > individual_scores(ground_truth.size(), 0.0);
+    vector< double > group_scores(number_of_groups, 0.0);
+
+    int nSeqs = ground_truth.size();
+    int nConds = ground_truth[0].size();
+
+    for(int i = 0;i<ground_truth.size();i++){
+      double one_rmse = 0.0;
+      double beta = 1.0;
+      #ifdef BETAOPTTOGETHER
+        if(NULL != par)
+          beta = par->getBetaForSeq(i);
+        one_rmse += least_square( prediction[i], ground_truth[i], beta, true );
+      #else
+        one_rmse += least_square( prediction[i], ground_truth[i], beta );
+      #endif
+
+        one_rmse = sqrt( one_rmse / nConds );
+        individual_scores[i] = one_rmse;
+    }
+
+    for(int i = 0;i<individual_scores.size();i++){
+      group_scores[group_mapping[i]] += exp(-1.0*individual_scores[i]);
+    }
+
+    for(int i = 0;i<group_scores.size();i++){
+      group_scores[i] = -1.0*log(group_scores[i]);
+    }
+
+    double overall_score = 0.0;
+    for(int i = 0;i<group_scores.size();i++){
+      overal_score += group_scores[i];
+    }
+
+    return overall_score;
+}
+
+void GroupedSoftMin_ObjFunc::read_grouping_file(string filename){
+  //parser is responsible for figuring out number of groups.
+  //parser populates group_mapping.
+
+
+  //Temporary for example
+  cerr << " Hello from the grouped soft min file parser! you asked to read file " << filename << endl;
+}

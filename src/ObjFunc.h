@@ -101,4 +101,16 @@ public:
 
 };
 
+class GroupedSoftMin_ObjFunc: public ObjFunc {
+public:
+  GroupedSoftMin_ObjFunc() : ObjFunc(){number_of_groups=1;}
+  ~GroupedSoftMin_ObjFunc(){}
+  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+
+  void read_grouping_file(string filename);
+private:
+  vector< int > group_mapping;
+  int number_of_groups;
+};
+
 #endif

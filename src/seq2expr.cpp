@@ -85,6 +85,8 @@ int main( int argc, char* argv[] )
     ExprPredictor::min_delta_f_CrossCorr = 1.0E-10;
     int cmdline_max_simplex_iterations = 400;
     int cmdline_max_gradient_iterations = 50;
+
+    string cmdline_soft_min_groups_filename;
     for ( int i = 1; i < argc; i++ )
     {
         if ( !strcmp( "-s", argv[ i ] ) )
@@ -162,6 +164,8 @@ int main( int argc, char* argv[] )
             cmdline_interaction_option_str = argv[ ++i ];
     else if( !strcmp("-train_weights", argv[ i ]))
         train_weights_filename = argv[ ++i ];
+    else if( !strcmp("-softmin_groups", argv[ i ]))
+        cmdline_soft_min_groups_filename = argv[ ++i ];
     }
 
     if ( seqFile.empty() || exprFile.empty() || motifFile.empty() || factorExprFile.empty() || outFile.empty() || ( ( cmdline_modelOption == QUENCHING || cmdline_modelOption == CHRMOD_UNLIMITED || cmdline_modelOption == CHRMOD_LIMITED ) &&  factorInfoFile.empty() ) || ( cmdline_modelOption == QUENCHING && repressionFile.empty() ) )
@@ -609,6 +613,7 @@ int main( int argc, char* argv[] )
     predictor->max_simplex_iterations = cmdline_max_simplex_iterations;
     predictor->max_gradient_iterations = cmdline_max_gradient_iterations;
 
+    //Setup soft min objective function and groups.
 
     //Setup a weighted objective if that is appropriate
     if( predictor->objOption == WEIGHTED_SSE) {
@@ -650,6 +655,18 @@ int main( int argc, char* argv[] )
                                             );
       predictor->trainingObjective = tmp_reg_obj_func;
     }
+
+
+    if( !cmdline_soft_min_groups_filename.empty() ){
+
+        delete predictor->trainingObjective;
+        GroupedSoftMin_ObjFunc *tmp_ptr = new GroupedSoftMin_ObjFunc();
+        tmp_ptr->read_grouping_file(cmdline_soft_min_groups_filename);
+        predictor->trainingObjective = tmp_ptr;
+    }
+
+
+
 
     if(upper_bound_par_read){
     	predictor->param_factory->setMaximums(upper_bound_par);
