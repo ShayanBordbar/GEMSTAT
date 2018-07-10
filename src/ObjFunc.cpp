@@ -231,7 +231,13 @@ double GroupedSoftMin_ObjFunc::eval(const vector<vector<double> >& ground_truth,
 
     //FOR DEBUG
     cerr << "HELLO FROM THE grouped soft min objective" << endl;
-    assert(ground_truth.size() == group_mapping.size());
+    //cerr << " group mapping size is " << group_mapping.size() << endl;
+    //cerr << " ground_truth  size is " << ground_truth.size() << endl;
+    //cerr << " prediction    size is " << prediction.size() << endl;
+    //cerr << " ground_truth  is " << ground_truth << endl;
+    //cerr << " prediction is " << prediction << endl;
+
+    assert(ground_truth.size() == prediction.size());
 
     vector< double > individual_scores(ground_truth.size(), 0.0);
     vector< double > group_scores(number_of_groups, 0.0);
@@ -255,7 +261,7 @@ double GroupedSoftMin_ObjFunc::eval(const vector<vector<double> >& ground_truth,
     }
 
     for(int i = 0;i<individual_scores.size();i++){
-      group_scores[group_mapping[i]] += exp(-1.0*individual_scores[i]);
+      group_scores[group_mapping[i]] += exp(-5.0*individual_scores[i]);
     }
 
     for(int i = 0;i<group_scores.size();i++){
@@ -264,7 +270,7 @@ double GroupedSoftMin_ObjFunc::eval(const vector<vector<double> >& ground_truth,
 
     double overall_score = 0.0;
     for(int i = 0;i<group_scores.size();i++){
-      overal_score += group_scores[i];
+      overall_score += group_scores[i];
     }
 
     return overall_score;
@@ -273,8 +279,20 @@ double GroupedSoftMin_ObjFunc::eval(const vector<vector<double> >& ground_truth,
 void GroupedSoftMin_ObjFunc::read_grouping_file(string filename){
   //parser is responsible for figuring out number of groups.
   //parser populates group_mapping.
-
-
+  ifstream fin;
+  fin.open(filename);
+  if(fin){
+    int group_nu;
+    while(fin >> group_nu){
+      group_mapping.push_back(group_nu);
+    }
+  }
+  fin.close();
+  int number_of_seqs;
+  number_of_seqs = group_mapping.size();
+  number_of_groups = group_mapping[number_of_seqs-1];
   //Temporary for example
   cerr << " Hello from the grouped soft min file parser! you asked to read file " << filename << endl;
+  //cerr << " read group mapping vector is" << group_mapping << endl;
+  //cerr << " group mapping size is" << number_of_seqs << endl;
 }
