@@ -296,3 +296,94 @@ void GroupedSoftMin_ObjFunc::read_grouping_file(string filename){
   //cerr << " read group mapping vector is" << group_mapping << endl;
   //cerr << " group mapping size is" << number_of_seqs << endl;
 }
+
+
+double Fold_Change_ObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
+  const ExprPar* par){
+
+  // TODO : change this function to consider fold changes. 
+
+    //FOR DEBUG
+    cerr << "HELLO FROM THE Fold_Change objective" << endl;
+    //cerr << " group mapping size is " << group_mapping.size() << endl;
+    //cerr << " ground_truth  size is " << ground_truth.size() << endl;
+    //cerr << " prediction    size is " << prediction.size() << endl;
+    //cerr << " ground_truth  is " << ground_truth << endl;
+    //cerr << " prediction is " << prediction << endl;
+
+    assert(ground_truth.size() == prediction.size());
+
+    vector< double > individual_scores(ground_truth.size(), 0.0);
+    vector< double > group_scores(number_of_groups, 0.0);
+
+    int nSeqs = ground_truth.size();
+    int nConds = ground_truth[0].size();
+
+    for(int i = 0;i<ground_truth.size();i++){
+      double one_rmse = 0.0;
+      double beta = 1.0;
+      #ifdef BETAOPTTOGETHER
+        if(NULL != par)
+          beta = par->getBetaForSeq(i);
+        one_rmse += least_square( prediction[i], ground_truth[i], beta, true );
+      #else
+        one_rmse += least_square( prediction[i], ground_truth[i], beta );
+      #endif
+
+        one_rmse = sqrt( one_rmse / nConds );
+        individual_scores[i] = one_rmse;
+    }
+
+    for(int i = 0;i<individual_scores.size();i++){
+      group_scores[group_mapping[i]] += exp(-5.0*individual_scores[i]);
+    }
+
+    for(int i = 0;i<group_scores.size();i++){
+      group_scores[i] = -1.0*log(group_scores[i]);
+    }
+
+    double overall_score = 0.0;
+    for(int i = 0;i<group_scores.size();i++){
+      overall_score += group_scores[i];
+    }
+
+    return overall_score;
+}
+
+void Fold_Change_ObjFunc::read_grouping_file(string filename){
+  //parser is responsible for figuring out number of groups.
+  //parser populates group_mapping.
+  ifstream fin;
+  fin.open(filename);
+  if(fin){
+    int group_nu;
+    while(fin >> group_nu){
+      group_mapping.push_back(group_nu);
+    }
+  }
+  fin.close();
+  int number_of_seqs;
+  number_of_seqs = group_mapping.size();
+  number_of_groups = group_mapping[number_of_seqs-1];
+  //Temporary for example
+  cerr << " Hello from the Fold_Change_ObjFunc group mapping file parser! you asked to read file " << filename << endl;
+  //cerr << " read group mapping vector is" << group_mapping << endl;
+  //cerr << " group mapping size is" << number_of_seqs << endl;
+}
+
+void Fold_Change_ObjFunc::read_treat_control_file(string filename){
+  // populates treat_control_map
+  // 
+  ifstream fin;
+  fin.open(filename);
+  if(fin){
+    int trtcont_nu;
+    while(fin >> trtcont_nu){
+      treat_control_map.push_back(trtcont_nu);
+    }
+  }
+  fin.close();
+  //Temporary for example
+  cerr << " Hello from the Fold_Change_ObjFunc read_treat_control_file function! you asked to read file " << filename << endl;
+
+  }

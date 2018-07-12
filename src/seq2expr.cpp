@@ -87,6 +87,12 @@ int main( int argc, char* argv[] )
     int cmdline_max_gradient_iterations = 50;
 
     string cmdline_soft_min_groups_filename;
+    // define the term used to store the name of the file that contains information on control and treatment experiments
+    // this file contains a column vector of integers with length equal to the number of conditions
+    // each paired control and treatment experiments are indicated with a unique number,
+    // control condition comes before the treatment condition.
+    string cmdline_treat_control_map_filename;
+
     for ( int i = 1; i < argc; i++ )
     {
         if ( !strcmp( "-s", argv[ i ] ) )
@@ -166,6 +172,8 @@ int main( int argc, char* argv[] )
         train_weights_filename = argv[ ++i ];
     else if( !strcmp("-softmin_groups", argv[ i ]))
         cmdline_soft_min_groups_filename = argv[ ++i ];
+    else if( !strcmp("-control_treat_map", argv[ i ]))
+        cmdline_treat_control_map_filename = argv[ ++i ];
     }
 
     if ( seqFile.empty() || exprFile.empty() || motifFile.empty() || factorExprFile.empty() || outFile.empty() || ( ( cmdline_modelOption == QUENCHING || cmdline_modelOption == CHRMOD_UNLIMITED || cmdline_modelOption == CHRMOD_LIMITED ) &&  factorInfoFile.empty() ) || ( cmdline_modelOption == QUENCHING && repressionFile.empty() ) )
@@ -656,17 +664,28 @@ int main( int argc, char* argv[] )
       predictor->trainingObjective = tmp_reg_obj_func;
     }
 
-
+    // Create the GroupedSoftMin_ObjFunc object if cmdline_soft_min_groups_filename is given as input
     if( !cmdline_soft_min_groups_filename.empty() ){
 
         delete predictor->trainingObjective;
         GroupedSoftMin_ObjFunc *tmp_ptr = new GroupedSoftMin_ObjFunc();
         tmp_ptr->read_grouping_file(cmdline_soft_min_groups_filename);
         predictor->trainingObjective = tmp_ptr;
+        delete tmp_ptr;
     }
 
+    // Create the Fold_Change_ObjFunc object if cmdline_treat_control_map_filename is given as input
+    // This objective function requires the grouping file to be provided as well.
+    // TODO: create a default grouping with each sequence in a separate group by itself
+    if( !cmdline_treat_control_map_filename.empty() ){
 
-
+        delete predictor->trainingObjective;
+        Fold_Change_ObjFunc *tmp_ptr = new Fold_Change_ObjFunc();
+        tmp_ptr->read_grouping_file(cmdline_soft_min_groups_filename);
+        tmp_ptr->read_treat_control_file(cmdline_treat_control_map_filename);
+        predictor->trainingObjective = tmp_ptr;
+        delete tmp_ptr;
+    }
 
     if(upper_bound_par_read){
     	predictor->param_factory->setMaximums(upper_bound_par);
