@@ -1121,11 +1121,15 @@ int cross_corr( const vector< double >& x, const vector< double >& y, const vect
 
 double least_square( const vector< double >& x, const vector< double >& y, double& beta, bool fix_beta /* = false */ )
 {
+    // Shayan has modified this: temporary trick to deal with NAs:
+    //  in my input construction I replace NAs with 1234 and here I ignore 1234 in either x or y
+    // I need to modify this, so it will handle NAs in a more sophisticated manner
     assert( x.size() == y.size() );
     int n = x.size();
 
     double numerator = 0, denom = 0;
     for ( int i = 0; i < n; i++ ) {
+        if((x[i] > 1233.9 && x[i] < 1234.1) || (y[i] > 1233.9 && y[i] < 1234.1)) continue;
         numerator += x[i] * y[i];
         denom += x[i] * x[i];
     }
@@ -1136,6 +1140,7 @@ double least_square( const vector< double >& x, const vector< double >& y, doubl
     double rss = 0;
     for ( int i = 0; i < n; i++ )
     {
+        if(x[i] == 1234 || y[i] == 1234) continue;
         rss += ( y[i] - beta * x[i] ) * ( y[i] - beta * x[i] );
     }
 
@@ -1562,4 +1567,38 @@ int indexCompl( const vector< int >& indices, int n, vector< int >& complIndices
     }
 
     return 0;
+}
+
+vector< double > log2( const vector< double >& v ){
+    vector< double > result;
+    for ( int i = 0; i < v.size(); i++ ) result.push_back( log2( v[ i ] ) );
+    return result;
+}
+
+vector <double> logFoldChange (const vector <double>& expression, const vector <int> treat_ctrl_map)
+{
+    // this function returns the log fold change assuming that experiments are ordered as explained:
+    // eventually I have to change this so it actually uses treat_ctrl_map. now I assume that experiment numbers are
+    // in increasing order starting from 0 and control experiments are immediately followed by treatment experiment e.g. 0,0,1,1,2,2,3,3,4,4,5,5,...
+    assert( expression.size() == treat_ctrl_map.size() );
+    int num_exp = expression.size() / 2;
+    double psudocnt = 0.0001;
+    vector <double> fold_change;
+    for( int i = 0; i<num_exp; i++ ){
+        assert(treat_ctrl_map[(2 * i) + 1] == i && treat_ctrl_map[(2 * i)] == i);
+        fold_change.push_back((expression[(2 * i) + 1] + psudocnt) / (expression[(2 * i)] + psudocnt));
+    }
+    vector <double> log_fold_change = log2(fold_change);
+    return log_fold_change;
+}
+
+vector <double> my_sigmoid (const vector <double>& x)
+{
+    // this function transforms a vector to sigmoid of it and then further transforms it to be between -1 and 1
+    // it is actually 2 * sigmoid(x) - 1
+    vector <double> sig_trans_vec;
+    for(int i = 0; i<x.size(); i++ ){
+        sig_trans_vec.push_back((2.0 * (1.0/(1 + exp(-1.0 * x[i]))) - 1.0));
+    }
+    return sig_trans_vec;
 }

@@ -108,22 +108,20 @@ public:
   double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
 
   void read_grouping_file(string filename);
-private:
+protected:
   vector< int > group_mapping;
   int number_of_groups;
 };
 
-class Fold_Change_ObjFunc: public ObjFunc {
+class Fold_Change_ObjFunc: public GroupedSoftMin_ObjFunc {
 public:
-  Fold_Change_ObjFunc() : ObjFunc(){number_of_groups=1;}
+  //Fold_Change_ObjFunc() : GroupedSoftMin_ObjFunc()
   ~Fold_Change_ObjFunc(){}
   double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
-
-  void read_grouping_file(string filename);
   void read_treat_control_file(string filename);
 private:
-  vector< int > group_mapping;
-  vector< int > treat_control_map
-  int number_of_groups;
+  //vector< int > group_mapping;
+  vector< int > treat_control_map;
+  //int number_of_groups;
 };
 #endif

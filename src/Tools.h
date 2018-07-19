@@ -244,6 +244,8 @@ double log_add( double p, double q, double r );
 
 // log. of a vector
 vector< double > log( const vector< double >& v );
+// log2. of a vector
+vector< double > log2( const vector< double >& v );
 
 // exp. of a vector
 vector< double > exp( const vector< double >& v );
@@ -547,4 +549,8 @@ int vectSubset( const vector< T >& v, const vector< int >& indices, vector< T >&
 
 // complement of an index set
 int indexCompl( const vector< int >& indices, int n, vector< int >& complIndices );
+
+vector <double> logFoldChange (const vector <double>& expression, const vector <int> treat_ctrl_map);
+vector <double> my_sigmoid (const vector <double>& x);
+
 #endif

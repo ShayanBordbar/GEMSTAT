@@ -671,7 +671,7 @@ int main( int argc, char* argv[] )
         GroupedSoftMin_ObjFunc *tmp_ptr = new GroupedSoftMin_ObjFunc();
         tmp_ptr->read_grouping_file(cmdline_soft_min_groups_filename);
         predictor->trainingObjective = tmp_ptr;
-        delete tmp_ptr;
+        //delete tmp_ptr;
     }
 
     // Create the Fold_Change_ObjFunc object if cmdline_treat_control_map_filename is given as input
@@ -684,7 +684,7 @@ int main( int argc, char* argv[] )
         tmp_ptr->read_grouping_file(cmdline_soft_min_groups_filename);
         tmp_ptr->read_treat_control_file(cmdline_treat_control_map_filename);
         predictor->trainingObjective = tmp_ptr;
-        delete tmp_ptr;
+        //delete tmp_ptr;
     }
 
     if(upper_bound_par_read){
