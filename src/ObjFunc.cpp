@@ -292,7 +292,7 @@ void GroupedSoftMin_ObjFunc::read_grouping_file(string filename){
   number_of_seqs = group_mapping.size();
   number_of_groups = group_mapping[number_of_seqs-1] + 1;
   //Temporary for example
-  cerr << " Hello from the grouped soft min file parser! you asked to read file " << filename << endl;
+  //cerr << " Hello from the grouped soft min file parser! you asked to read file " << filename << endl;
   //cerr << " read group mapping vector is" << group_mapping << endl;
   //cerr << " group mapping size is" << number_of_seqs << endl;
 }
@@ -304,7 +304,7 @@ double Fold_Change_ObjFunc::eval(const vector<vector<double> >& ground_truth, co
   // TODO : change this function to consider fold changes. 
 
     //FOR DEBUG
-    cerr << "HELLO FROM THE Fold_Change objective" << endl;
+    //cerr << "HELLO FROM THE Fold_Change objective" << endl;
     //cerr << " group mapping size is " << group_mapping.size() << endl;
     //cerr << " ground_truth  size is " << ground_truth.size() << endl;
     //cerr << " prediction    size is " << prediction.size() << endl;
@@ -342,7 +342,7 @@ double Fold_Change_ObjFunc::eval(const vector<vector<double> >& ground_truth, co
           beta = par->getBetaForSeq(i);
         //cerr << "Before least_square beta "<< i << endl;
         one_rmse += least_square( predicted_FoldChange, measured_FoldChange, beta, true );
-        cerr << "one_rsme " << one_rmse << endl;
+        //cerr << "one_rsme " << one_rmse << endl;
         //cerr << "after least_square beta "<< i << endl;
       #else
         //cerr << "Before least_square"<< i << endl;
@@ -353,25 +353,25 @@ double Fold_Change_ObjFunc::eval(const vector<vector<double> >& ground_truth, co
         //one_rmse = sqrt( one_rmse / nConds );
         individual_scores[i] = one_rmse;
     }
-    cerr << "individual_scores " << individual_scores << endl;
+    //cerr << "individual_scores " << individual_scores << endl;
 
     for(int i = 0;i<individual_scores.size();i++){
       group_scores[group_mapping[i]] += exp(-10.0*individual_scores[i]);
     }
-    cerr << "group_scores " << group_scores << endl;
+    //cerr << "group_scores " << group_scores << endl;
 
     //cerr << "after aggregation"<< endl;
     for(int i = 0;i<group_scores.size();i++){
       group_scores[i] = -1.0*log(group_scores[i]);
     }
-    cerr << "group_scores_minus_log " << group_scores << endl;
+    //cerr << "group_scores_minus_log " << group_scores << endl;
     //cerr << "after group_scores"<< endl;
     double overall_score = 0.0;
     for(int i = 0;i<group_scores.size();i++){
       overall_score += group_scores[i];
     }
     //cerr << "after overall_score"<< endl;
-    cerr << "overall_score " <<overall_score << endl;
+    //cerr << "overall_score " <<overall_score << endl;
     return overall_score;
 }
 
@@ -389,6 +389,6 @@ void Fold_Change_ObjFunc::read_treat_control_file(string filename){
   }
   fin.close();
   //Temporary for example
-  cerr << " Hello from the Fold_Change_ObjFunc read_treat_control_file function! you asked to read file " << filename << endl;
+  //cerr << " Hello from the Fold_Change_ObjFunc read_treat_control_file function! you asked to read file " << filename << endl;
 
   }

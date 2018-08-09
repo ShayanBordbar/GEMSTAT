@@ -112,7 +112,9 @@ void ExprPredictor::set_objective_option( ObjType in_obj_option ){
 
 double ExprPredictor::objFunc( const ExprPar& par )
 {
+    cout << "**evaluating the objective"<<endl;
     double objective_value = evalObjective( par );
+    cout << "**evaluated the objective"<<endl;
 
     return objective_value;
 }
@@ -365,7 +367,7 @@ double ExprPredictor::evalObjective( const ExprPar& par )
 
     //Evaluate the objective function on that.
     double ret_val = trainingObjective->eval(ground_truths, predictions, &par);
-
+    //cout << "ret_val is being returned "<< ret_val << endl;
     return ret_val;
 
 }
