@@ -5,6 +5,8 @@
 #include <gsl/gsl_sf_trig.h>
 #include <gsl/gsl_complex_math.h>
 
+#include <cmath>
+
 #include "Tools.h"
 
 const log_add_table table( -10.0, 0, 500 );       // global variable
@@ -1129,7 +1131,7 @@ double least_square( const vector< double >& x, const vector< double >& y, doubl
 
     double numerator = 0, denom = 0;
     for ( int i = 0; i < n; i++ ) {
-        if((x[i] > 1233.9 && x[i] < 1234.1) || (y[i] > 1233.9 && y[i] < 1234.1)) continue;
+        //if((x[i] > 1233.9 && x[i] < 1234.1) || (y[i] > 1233.9 && y[i] < 1234.1)) continue;
         numerator += x[i] * y[i];
         denom += x[i] * x[i];
     }
@@ -1140,9 +1142,10 @@ double least_square( const vector< double >& x, const vector< double >& y, doubl
     double rss = 0;
     for ( int i = 0; i < n; i++ )
     {
-        if(x[i] == 1234 || y[i] == 1234) continue;
+        //if(x[i] == 1234 || y[i] == 1234) continue;
         rss += ( y[i] - beta * x[i] ) * ( y[i] - beta * x[i] );
     }
+    assert( rss >= 0 );
 
     return rss;
 }
@@ -1575,7 +1578,7 @@ vector< double > log2( const vector< double >& v ){
     return result;
 }
 
-vector <double> logFoldChange (const vector <double>& expression, const vector <int> treat_ctrl_map)
+vector <double> logFoldChange (const vector <double>& expression, const vector <int>& treat_ctrl_map)
 {
     // this function returns the log fold change assuming that experiments are ordered as explained:
     // eventually I have to change this so it actually uses treat_ctrl_map. now I assume that experiment numbers are
@@ -1587,6 +1590,31 @@ vector <double> logFoldChange (const vector <double>& expression, const vector <
     for( int i = 0; i<num_exp; i++ ){
         assert(treat_ctrl_map[(2 * i) + 1] == i && treat_ctrl_map[(2 * i)] == i);
         fold_change.push_back((expression[(2 * i) + 1] + psudocnt) / (expression[(2 * i)] + psudocnt));
+    }
+    vector <double> log_fold_change = log2(fold_change);
+    return log_fold_change;
+}
+vector <double> logFoldChange_NA (const vector <double>& expression, const vector <int>& treat_ctrl_map, const vector <double>& cur_fc_prediction)
+{
+    // this function returns the log fold change assuming that experiments are ordered as explained:
+    // eventually I have to change this so it actually uses treat_ctrl_map. now I assume that experiment numbers are
+    // in increasing order starting from 0 and control experiments are immediately followed by treatment experiment e.g. 0,0,1,1,2,2,3,3,4,4,5,5,...
+    assert( expression.size() == treat_ctrl_map.size() );
+    int num_exp = expression.size() / 2;
+    double psudocnt = 0.0001;
+    vector <double> fold_change;
+    for( int i = 0; i<num_exp; i++ ){
+        assert(treat_ctrl_map[(2 * i) + 1] == i && treat_ctrl_map[(2 * i)] == i);
+        fold_change.push_back((expression[(2 * i) + 1] + psudocnt) / (expression[(2 * i)] + psudocnt));
+        //cerr << "fold_change i " << fold_change << i << endl;
+
+        if((fold_change[i] > 1233.0 && fold_change[i] < 1235.0)){ 
+            //cerr << "entered the if " << i <<endl;
+            // This if deals with NAs. I have set NAs to result in log fold change equal to 1234. Here if
+            // it finds such log fold change number, sets it to the prediction so in the next step for calculating
+            // the least squares, it calculates zero and doesn't care about the NA.
+            fold_change[i] = pow(2.0, cur_fc_prediction[i]);
+        }
     }
     vector <double> log_fold_change = log2(fold_change);
     return log_fold_change;

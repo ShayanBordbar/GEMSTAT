@@ -19,6 +19,7 @@
 #include <vector>
 #include <limits>
 #include <numeric>
+#include <cmath>
 
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
@@ -550,7 +551,8 @@ int vectSubset( const vector< T >& v, const vector< int >& indices, vector< T >&
 // complement of an index set
 int indexCompl( const vector< int >& indices, int n, vector< int >& complIndices );
 
-vector <double> logFoldChange (const vector <double>& expression, const vector <int> treat_ctrl_map);
+vector <double> logFoldChange (const vector <double>& expression, const vector <int>& treat_ctrl_map);
+vector <double> logFoldChange_NA (const vector <double>& expression, const vector <int>& treat_ctrl_map, const vector <double>& cur_fc_prediction);
 vector <double> my_sigmoid (const vector <double>& x);
 
 #endif
