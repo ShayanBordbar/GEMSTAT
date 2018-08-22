@@ -301,7 +301,8 @@ void GroupedSoftMin_ObjFunc::read_grouping_file(string filename){
 double Fold_Change_ObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
   const ExprPar* par){
 
-  // TODO : change this function to consider fold changes. 
+  // TODO : 
+
 
     //FOR DEBUG
     //cerr << "HELLO FROM THE Fold_Change objective" << endl;
@@ -392,3 +393,85 @@ void Fold_Change_ObjFunc::read_treat_control_file(string filename){
   //cerr << " Hello from the Fold_Change_ObjFunc read_treat_control_file function! you asked to read file " << filename << endl;
 
   }
+
+  double Weighted_Fold_Change_ObjFunc::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
+  const ExprPar* par){
+
+    assert(ground_truth.size() == prediction.size());
+        //FOR DEBUG
+    //cerr << "HELLO FROM THE Weighted_Fold_Change_ObjFunc objective" << endl;
+
+
+    vector< double > individual_scores(ground_truth.size(), 0.0);
+    vector< double > group_scores(number_of_groups, 0.0);
+    //cerr << " number_of_groups "<< number_of_groups << endl;
+
+    int nSeqs = ground_truth.size();
+    int nConds = ground_truth[0].size();
+    int nExp = ground_truth[0].size() / 2.0;
+    //double squaredErr = 0.0;
+
+    for(int i = 0;i<ground_truth.size();i++){
+      double one_rmse = 0.0;
+      double beta = 1.0;
+      vector< double > predicted_FoldChange(nExp, 0.0);
+      vector< double > measured_FoldChange(nExp, 0.0);
+      
+      predicted_FoldChange = logFoldChange(prediction[i], treat_control_map);
+      predicted_FoldChange = my_sigmoid(predicted_FoldChange);
+      //cerr<<" predicted_FoldChange size " << predicted_FoldChange.size() << endl;
+      //cerr<<" predicted_FoldChange " << predicted_FoldChange << endl;
+
+      //cerr << "Before second log fold change " << endl;
+      //cerr<<" measured_FoldChange size " << measured_FoldChange.size() << endl;
+      measured_FoldChange  = logFoldChange_NA(ground_truth[i], treat_control_map, predicted_FoldChange);
+      //cerr<<" measured_FoldChange " << measured_FoldChange << endl;
+      #ifdef BETAOPTTOGETHER
+        if(NULL != par)
+          beta = par->getBetaForSeq(i);
+        //cerr << "Before least_square beta "<< i << endl;
+        for(int j = 0;j<nExp;j++){
+          double single_sqr_error = (beta*predicted_FoldChange[j] - measured_FoldChange[j]);
+          single_sqr_error = weights->getElement(i,(int) 2*j)*pow(single_sqr_error,2);
+          //squaredErr += single_sqr_error;
+          one_rmse += single_sqr_error;
+        }
+        // one_rmse += least_square( predicted_FoldChange, measured_FoldChange, beta, true );
+        //cerr << "one_rsme " << one_rmse << endl;
+        //cerr << "after least_square beta "<< i << endl;
+      #else
+        cout << "weights are not being considered, since BETAOPTTOGETHER was not defined" <<endl;
+        one_rmse += least_square( predicted_FoldChange, measured_FoldChange, beta );
+      #endif
+
+        //one_rmse = sqrt( one_rmse / nConds );
+        individual_scores[i] = one_rmse;
+    }
+
+    //cerr << "individual_scores " << individual_scores << endl;
+
+    for(int i = 0;i<individual_scores.size();i++){
+      group_scores[group_mapping[i]] += exp(-5.0*individual_scores[i]);
+    }
+    //cerr << "group_scores " << group_scores << endl;
+
+    //cerr << "after aggregation"<< endl;
+    for(int i = 0;i<group_scores.size();i++){
+      group_scores[i] = -1.0*log(group_scores[i]);
+    }
+    //cerr << "group_scores_minus_log " << group_scores << endl;
+    //cerr << "after group_scores"<< endl;
+    double overall_score = 0.0;
+    for(int i = 0;i<group_scores.size();i++){
+      overall_score += group_scores[i];
+    }
+    //cerr << "after overall_score"<< endl;
+    //cerr << "overall_score " <<overall_score << endl;
+    return overall_score;
+
+  }
+
+
+
+
+

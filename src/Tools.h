@@ -340,6 +340,7 @@ double pgp ( const vector< double >& x, const vector< double >& y, double& beta 
 // least-square fit of two vectors: beta - coefficient, return RSS
 double least_square( const vector< double >& x, const vector< double >& y, double& beta , bool fix_beta = false);
 double wted_least_square( const vector< double >& x, const vector< double >& y, double& beta, double on_thr , bool fix_beta = false);
+// double weighted_least_square( const vector< double >& x, const vector< double >& y, double& beta, bool fix_beta, const vector< double >& weigths);
 
 // check if a vector of real numbers is probablity mass function
 bool isPmf( const vector< double > &p );

@@ -230,10 +230,11 @@ int main( int argc, char* argv[] )
         vector<string> weights_condNames(0);
         rval = readMatrix( train_weights_filename, weights_labels, weights_condNames, weights_data );
         ASSERT_MESSAGE( rval != RET_ERROR , "Could not read the weights data file.");
-        ASSERT_MESSAGE( labels.size() == nSeqs , "Mismatch between number of labels and number of sequences");
+        cerr<<weights_labels.size() << " nseq" << nSeqs << endl;
+        ASSERT_MESSAGE( weights_labels.size() == nSeqs , "Mismatch between number of labels and number of sequences");
         for ( int i = 0; i < nSeqs; i++ )
         {
-            if( weights_labels[ i ] != seqNames[ i ] ) cout << weights_labels[i] << seqNames[i] << endl;
+            if( weights_labels[ i ] != seqNames[ i ] ) cout << " weights_labels: "<< weights_labels[i]<< " seqname: " << seqNames[i] << endl;
             ASSERT_MESSAGE( weights_labels[i] == seqNames[i] , "A label and a sequence name did not agree.");
         }
         training_weights = new Matrix( weights_data );
@@ -680,10 +681,19 @@ int main( int argc, char* argv[] )
     if( !cmdline_treat_control_map_filename.empty() ){
 
         delete predictor->trainingObjective;
-        Fold_Change_ObjFunc *tmp_ptr = new Fold_Change_ObjFunc();
-        tmp_ptr->read_grouping_file(cmdline_soft_min_groups_filename);
-        tmp_ptr->read_treat_control_file(cmdline_treat_control_map_filename);
-        predictor->trainingObjective = tmp_ptr;
+        if(train_weights_loaded){
+            Weighted_Fold_Change_ObjFunc *tmp_ptr = new Weighted_Fold_Change_ObjFunc();
+            tmp_ptr->read_grouping_file(cmdline_soft_min_groups_filename);
+            tmp_ptr->read_treat_control_file(cmdline_treat_control_map_filename);
+            tmp_ptr->set_weights(training_weights);
+            predictor->trainingObjective = tmp_ptr;
+        }else{
+            Fold_Change_ObjFunc *tmp_ptr = new Fold_Change_ObjFunc();
+            tmp_ptr->read_grouping_file(cmdline_soft_min_groups_filename);
+            tmp_ptr->read_treat_control_file(cmdline_treat_control_map_filename);
+            predictor->trainingObjective = tmp_ptr;
+        }
+        
         //delete tmp_ptr;
     }
 

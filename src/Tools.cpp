@@ -1131,7 +1131,6 @@ double least_square( const vector< double >& x, const vector< double >& y, doubl
 
     double numerator = 0, denom = 0;
     for ( int i = 0; i < n; i++ ) {
-        //if((x[i] > 1233.9 && x[i] < 1234.1) || (y[i] > 1233.9 && y[i] < 1234.1)) continue;
         numerator += x[i] * y[i];
         denom += x[i] * x[i];
     }
@@ -1149,6 +1148,27 @@ double least_square( const vector< double >& x, const vector< double >& y, doubl
 
     return rss;
 }
+
+// double weighted_least_square( const vector< double >& x, const vector< double >& y, double& beta, bool fix_beta /* = false */, const vector< double >& weigths )
+// {
+//     assert( x.size() == y.size() );
+//     int n = x.size();
+//         double numerator = 0, denom = 0;
+//     for ( int i = 0; i < n; i++ ) {
+//         numerator += x[i] * y[i];
+//         denom += x[i] * x[i];
+//     }
+//     if(!fix_beta){
+//         beta = numerator / denom;
+//     }
+//     double rss = 0;
+
+
+
+
+// }
+
+
 
 double wted_least_square( const vector< double >& x, const vector< double >& y, double& beta, double on_thr, bool fix_beta /* = false */ )
 {

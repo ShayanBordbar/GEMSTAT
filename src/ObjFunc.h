@@ -115,13 +115,21 @@ protected:
 
 class Fold_Change_ObjFunc: public GroupedSoftMin_ObjFunc {
 public:
-  //Fold_Change_ObjFunc() : GroupedSoftMin_ObjFunc()
+  Fold_Change_ObjFunc() : GroupedSoftMin_ObjFunc() {}
   ~Fold_Change_ObjFunc(){}
   double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
   void read_treat_control_file(string filename);
-private:
+protected:
   //vector< int > group_mapping;
   vector< int > treat_control_map;
   //int number_of_groups;
+};
+
+class Weighted_Fold_Change_ObjFunc: public Fold_Change_ObjFunc, public Weighted_ObjFunc_Mixin {
+public:
+    Weighted_Fold_Change_ObjFunc() : Fold_Change_ObjFunc(), Weighted_ObjFunc_Mixin() {}
+    ~Weighted_Fold_Change_ObjFunc(){};
+  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+
 };
 #endif

@@ -112,9 +112,9 @@ void ExprPredictor::set_objective_option( ObjType in_obj_option ){
 
 double ExprPredictor::objFunc( const ExprPar& par )
 {
-    cout << "**evaluating the objective"<<endl;
+    //cout << "**evaluating the objective"<<endl;
     double objective_value = evalObjective( par );
-    cout << "**evaluated the objective"<<endl;
+    //cout << "**evaluated the objective"<<endl;
 
     return objective_value;
 }
@@ -263,14 +263,19 @@ int ExprPredictor::predict( const ExprPar& par, const SiteVec& targetSites_, int
 		}
 
 		//End of skipping code.	END_SKIPPING
-
+    //cout << "weights : " << weights << endl;
+    //cout << "creating ExprFunc ..."  << endl;
 
     ExprFunc* func = createExprFunc( par , targetSites_, targetSeqLength, seq_num);
-		targetExprs.resize(nConds());
+
+	targetExprs.resize(nConds());
     for ( int j = 0; j < nConds(); j++ )
     {
+        //cout << "going through conds ... " << j << endl;
+        //cout << "corresponding weight is ... " << (int) j/2 << endl;
+
 				//Code for skipping during training BEGIN_SKIPPING
-				if( this->is_training() && weights != NULL && weights->getElement(seq_num,j) <= 0.0){
+				if( this->is_training() && weights != NULL && weights->getElement(seq_num,  j) <= 0.0){
 					//cerr << "TEMPORARY DEBUG CODE, skipping unweighted bin (" << seq_num << "," << j << ")." << endl;
 					targetExprs[j] = 0.0;
 					continue;
@@ -313,6 +318,7 @@ int ExprPredictor::predict_all( const ExprPar& par , vector< vector< double > > 
 
     //Create predictions for every sequence and condition
     for ( int i = 0; i < nSeqs(); i++ ) {
+            //cout << "predicting seq number " << i << endl;
 			vector<double> one_seq_predictions(nConds());
 
 			this->predict(par, seqSites[i], seqLengths[i], one_seq_predictions, i );
@@ -358,14 +364,16 @@ double ExprPredictor::evalObjective( const ExprPar& par )
 {
 	vector<vector<double> > ground_truths;
 	vector<vector<double> > predictions;
+    //cout << "reading ground_truths ... " << endl;
 
 	for(int i = 0;i< nSeqs();i++){//Populate ground truths
 		ground_truths.push_back(training_data->get_output_row(i));
 	}
-
+    //cout << "getting predictions ... " << endl;
 	this->predict_all(par, predictions);
 
     //Evaluate the objective function on that.
+    //cout << "Evaluating the objective function ... " << endl;
     double ret_val = trainingObjective->eval(ground_truths, predictions, &par);
     //cout << "ret_val is being returned "<< ret_val << endl;
     return ret_val;
@@ -384,6 +392,8 @@ int ExprPredictor::simplex_minimize( ExprPar& par_result, double& obj_result )
 
     pars.clear();
     pars = free_pars;
+    cout << "number of free parameters: "<< pars.size() << endl;
+    cout << "number of fix parameters: "<< fix_pars.size() << endl;
 
     //SIMPLEX MINIMIZATION with NLOPT
     nlopt::opt optimizer(nlopt::LN_NELDERMEAD, pars.size());
@@ -401,9 +411,11 @@ int ExprPredictor::simplex_minimize( ExprPar& par_result, double& obj_result )
       param_factory->separateParams(param_factory->getMaximums(), free_mins, fix_mins, indicator_bool);
       optimizer.set_upper_bounds(free_mins);
     }
+    cout << "before minimization: "<< endl;
 
     nlopt::result result = optimizer.optimize(free_pars, obj_result);
     obj_result = optimizer.last_optimum_value();
+    cout << "after minimization: "<< endl;
     //Done Minimizing
 
     param_factory->joinParams(free_pars, fix_pars, pars, indicator_bool);
