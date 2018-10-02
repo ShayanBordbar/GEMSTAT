@@ -450,15 +450,27 @@ void Fold_Change_ObjFunc::read_treat_control_file(string filename){
 
     //cerr << "individual_scores " << individual_scores << endl;
 
-    for(int i = 0;i<individual_scores.size();i++){
-      group_scores[group_mapping[i]] += exp(-5.0*individual_scores[i]);
-    }
-    //cerr << "group_scores " << group_scores << endl;
 
-    //cerr << "after aggregation"<< endl;
-    for(int i = 0;i<group_scores.size();i++){
-      group_scores[i] = -1.0*log(group_scores[i]);
+    // ############## => change this to normal sum because in the first run I am only using one enhancer per gene and want to compare with the linear model
+    // ##############
+    // for(int i = 0;i<individual_scores.size();i++){
+    //   group_scores[group_mapping[i]] += exp(-5.0*individual_scores[i]);
+    // }
+    // //cerr << "group_scores " << group_scores << endl;
+
+    // //cerr << "after aggregation"<< endl;
+    // for(int i = 0;i<group_scores.size();i++){
+    //   group_scores[i] = -1.0*log(group_scores[i]);
+    // }
+    // ##############
+    // ##############
+
+    // This part of obj func is temporary and will be changed
+    for(int i = 0;i<individual_scores.size();i++){
+       group_scores[group_mapping[i]] += individual_scores[i];
     }
+
+
     //cerr << "group_scores_minus_log " << group_scores << endl;
     //cerr << "after group_scores"<< endl;
     double overall_score = 0.0;
