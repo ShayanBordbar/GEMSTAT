@@ -131,6 +131,8 @@ int main( int argc, char* argv[] )
     for ( int i = 0; i < motifNames.size(); i++ )
     {
         factorIdxMap[motifNames[i]] = i;
+
+        cerr << "MAX LLRs for motif "<< motifNames[i] << " is " << motifs[i].getMaxLLR() << endl;
     }
 
     //initialize the energy threshold factors
@@ -201,6 +203,7 @@ int main( int argc, char* argv[] )
     //     cout << "Repressors:" << endl << repIndicators << endl;
     //     cout << "Repression matrix:" << endl << repressionMat << endl;
          cerr << "Site representation of sequences:" << endl;
+
          for ( int i = 0; i < nSeqs; i++ ) {
              cout << ">" << seqNames[i] << endl;
              for ( int j = 0; j < seqSites[i].size(); j++ ){

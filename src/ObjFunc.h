@@ -129,7 +129,25 @@ class Weighted_Fold_Change_ObjFunc: public Fold_Change_ObjFunc, public Weighted_
 public:
     Weighted_Fold_Change_ObjFunc() : Fold_Change_ObjFunc(), Weighted_ObjFunc_Mixin() {}
     ~Weighted_Fold_Change_ObjFunc(){};
-  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+    double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
 
 };
+
+class logistic_classifier: public ObjFunc {
+public:
+  logistic_classifier(){}
+  //logistic_classifier(double _w){w = _w;}
+  ~logistic_classifier(){}
+  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+//protected:
+  //double w;
+};
+
+class Weighted_logistic_classifier: public logistic_classifier, public Weighted_ObjFunc_Mixin {
+public:
+  Weighted_logistic_classifier() : logistic_classifier(), Weighted_ObjFunc_Mixin() {}
+  ~Weighted_logistic_classifier(){};
+  double eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction, const ExprPar* par);
+};
+
 #endif

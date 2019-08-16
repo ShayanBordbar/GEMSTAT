@@ -92,6 +92,7 @@ int main( int argc, char* argv[] )
     // each paired control and treatment experiments are indicated with a unique number,
     // control condition comes before the treatment condition.
     string cmdline_treat_control_map_filename;
+    bool classifier_obj = false;
 
     for ( int i = 1; i < argc; i++ )
     {
@@ -150,30 +151,32 @@ int main( int argc, char* argv[] )
             dnase_file = argv[ ++i ];
         else if ( !strcmp( "-ft", argv[ i ]))
             factor_thr_file = argv[ ++i ];
-	else if ( !strcmp( "--seed", argv[ i ]))
-	    initialSeed = atol( argv[++i] );
-	else if ( !strcmp("-po", argv[ i ]))
-	    par_out_file = argv[ ++i ]; //output file for pars at the en
-  else if ( !strcmp("-onebeta", argv[ i ]))
-      cmdline_one_beta = true;
-  else if ( !strcmp("-l1", argv[ i ]))
-      l1 = atof(argv[ ++i ]);
-  else if ( !strcmp("-l2", argv[ i ]))
-      l2 = atof(argv[ ++i ]);
-	else if ( !strcmp("-lower_bound", argv[ i ]))
-	    lower_bound_file = argv[ ++i ];
-  else if ( !strcmp("-upper_bound", argv[ i ]))
-	    upper_bound_file = argv[ ++i ];
+	    else if ( !strcmp( "--seed", argv[ i ]))
+	        initialSeed = atol( argv[++i] );
+	    else if ( !strcmp("-po", argv[ i ]))
+	        par_out_file = argv[ ++i ]; //output file for pars at the en
+        else if ( !strcmp("-onebeta", argv[ i ]))
+            cmdline_one_beta = true;
+        else if ( !strcmp("-l1", argv[ i ]))
+            l1 = atof(argv[ ++i ]);
+        else if ( !strcmp("-l2", argv[ i ]))
+            l2 = atof(argv[ ++i ]);
+	    else if ( !strcmp("-lower_bound", argv[ i ]))
+	        lower_bound_file = argv[ ++i ];
+        else if ( !strcmp("-upper_bound", argv[ i ]))
+	        upper_bound_file = argv[ ++i ];
         else if( !strcmp("-no_gt_out", argv[ i ]))
             cmdline_write_gt = false;
         else if( !strcmp("-int", argv[ i ]))
             cmdline_interaction_option_str = argv[ ++i ];
-    else if( !strcmp("-train_weights", argv[ i ]))
-        train_weights_filename = argv[ ++i ];
-    else if( !strcmp("-softmin_groups", argv[ i ]))
-        cmdline_soft_min_groups_filename = argv[ ++i ];
-    else if( !strcmp("-control_treat_map", argv[ i ]))
-        cmdline_treat_control_map_filename = argv[ ++i ];
+        else if( !strcmp("-train_weights", argv[ i ]))
+            train_weights_filename = argv[ ++i ];
+        else if( !strcmp("-softmin_groups", argv[ i ]))
+            cmdline_soft_min_groups_filename = argv[ ++i ];
+        else if( !strcmp("-control_treat_map", argv[ i ]))
+            cmdline_treat_control_map_filename = argv[ ++i ];
+        else if( !strcmp("-classifier", argv[ i ]))
+            classifier_obj = true;
     }
 
     if ( seqFile.empty() || exprFile.empty() || motifFile.empty() || factorExprFile.empty() || outFile.empty() || ( ( cmdline_modelOption == QUENCHING || cmdline_modelOption == CHRMOD_UNLIMITED || cmdline_modelOption == CHRMOD_LIMITED ) &&  factorInfoFile.empty() ) || ( cmdline_modelOption == QUENCHING && repressionFile.empty() ) )
@@ -432,6 +435,7 @@ int main( int argc, char* argv[] )
 	}
 		cerr << "DONE." << endl;
     }
+    //cerr << "upper bounds : " << upper_bound_par << endl;
 
     if ( !lower_bound_file.empty() ){
 		cerr << "Loading lower bounds...";
@@ -446,7 +450,7 @@ int main( int argc, char* argv[] )
 	}
 		cerr << "DONE." << endl;
     }
-
+    //cerr << "lower bounds : " << lower_bound_par << endl;
     //Check AGAIN that the indicator_bool will be the right shape for the parameters that are read.
     vector < double > all_pars_for_test;
     par_init.getRawPars(all_pars_for_test );
@@ -458,12 +462,14 @@ int main( int argc, char* argv[] )
 
     //Check that we can access and write to the par outfile now, so that we can warn the user before a lot of time was spent on the optimization
     if( !par_out_file.empty() ){
+        cout << "in !par_out_file.empty()" << endl;
         par_out_stream.open( par_out_file.c_str() );
         if( ! par_out_stream ){
                 cerr << "Cannot open the parameter output file " << par_out_file << " for writing." << endl;
                 exit(1);
         }
     }
+    //cerr << "after param output file" << endl;
 
     //initialize the energy threshold factors
     vector < double > energyThrFactors(nFactors, eTF);
@@ -471,7 +477,7 @@ int main( int argc, char* argv[] )
     if(read_par_init_file){
       assert(par_init.my_space == PROB_SPACE);
       //assert(energyThrFactors.size() == par_init.energyThrFactors.size());
-
+      //cerr << "in read_par_init_file, after first assert" << endl;
       //energyThrFactors = par_init.energyThrFactors;
       for(int i = 0;i<((gsparams::DictList&)par_init.my_pars)["tfs"].size();i++){
           energyThrFactors[i] = ((gsparams::DictList&)par_init.my_pars)["tfs"][i]["annot_thresh"];
@@ -483,27 +489,25 @@ int main( int argc, char* argv[] )
       energyThrFactors.assign(energyThrFactors.size(),eTF);
     }
 
-
     if( ! factor_thr_file.empty() )//TODO: Totally eliminate the factor_thr_file.
     {
       int readFactorRet = readFactorThresholdFile(factor_thr_file, energyThrFactors, nFactors);
       ASSERT_MESSAGE( 0==readFactorRet , "Difficulty opening the factor_thr_input file.");
       read_factor_thresh_file = true;
     }
-
-
+    
 
     //assign that back to the initial par file so that it receives any changes made.
     assert(par_init.my_space == PROB_SPACE);
+    
     //assert(energyThrFactors.size() == par_init.energyThrFactors.size());//TODO: restore
-
     //New way to do this
     //par_init.energyThrFactors = energyThrFactors;
 
     for(int i = 0;i<((gsparams::DictList&)par_init.my_pars)["tfs"].size();i++){
         par_init.my_pars["tfs"][i]["annot_thresh"] = energyThrFactors.at(i);
     }
-
+    
     //**** ANNOTATE THE SEQUENCES
     // site representation of the sequences
     // TODO: Should this code be removed? If we are using this code, and no command-line option was provided for energyThrFactors, but a .par file was provided, shouldn't it use the thresholds learned there? (So, shouldn't it happen after reading the par file?)
@@ -552,7 +556,7 @@ int main( int argc, char* argv[] )
             seqLengths[i] = seqs[i].size();
         }
     }
-
+    
     //***** DONE ANNOTATING
 
     //TODO: R_SEQ Either remove this feature or un-comment it.
@@ -608,9 +612,7 @@ int main( int argc, char* argv[] )
         if ( intOption == GAUSSIAN ) cout << "Sigma = " << factorIntSigma << endl;
     }
     //cout << "Search_Option = " << getSearchOptionStr( ExprPar::searchOption ) << endl; //TODO: restore
-
-
-
+    cerr << "before ExprPredictor* predictor" << endl;
 
     // create the expression predictor
     ExprPredictor* predictor = new ExprPredictor( seqs, seqSites, seqLengths, training_dataset, motifs, expr_model, indicator_bool, motifNames );
@@ -666,6 +668,7 @@ int main( int argc, char* argv[] )
     }
 
     // Create the GroupedSoftMin_ObjFunc object if cmdline_soft_min_groups_filename is given as input
+
     if( !cmdline_soft_min_groups_filename.empty() ){
 
         delete predictor->trainingObjective;
@@ -697,23 +700,36 @@ int main( int argc, char* argv[] )
         //delete tmp_ptr;
     }
 
+    if( classifier_obj){
+        if(train_weights_loaded){
+            Weighted_logistic_classifier *tmp_ptr = new Weighted_logistic_classifier();
+            tmp_ptr->set_weights(training_weights);
+            predictor->trainingObjective = tmp_ptr;
+        }else{
+            logistic_classifier *tmp_ptr = new logistic_classifier();
+            predictor->trainingObjective = tmp_ptr;
+        }
+    }
+
     if(upper_bound_par_read){
     	predictor->param_factory->setMaximums(upper_bound_par);
     }
     if(lower_bound_par_read){
     	predictor->param_factory->setMinimums(lower_bound_par);
     }
-
+    
     //**** CHECK that all loaded pars have the same ordering and parameter names.
     vector<string> path_vector;
     for(gsparams::DictList::iterator itr = par_init.my_pars.begin();itr != par_init.my_pars.end();++itr){
         path_vector.push_back(itr.get_path());
     }
+
     vector< std::pair<std::string , gsparams::DictList* > > all_loaded_params;
 
     all_loaded_params.push_back(std::make_pair("free_fix",&(param_ff.my_pars)));
     all_loaded_params.push_back(std::make_pair("lower_bounds",&(lower_bound_par.my_pars)));
     all_loaded_params.push_back(std::make_pair("upper_bounds",&(upper_bound_par.my_pars)));
+    
     /*Only if using l1/l2 regularization*/
     if(setup_regularization){
         all_loaded_params.push_back(std::make_pair("reg_centers",&(tmp_centers.my_pars)));
@@ -722,9 +738,14 @@ int main( int argc, char* argv[] )
     }
 
     for(int i = 0;i<all_loaded_params.size();i++){
+        //cerr << "all_loaded_params.size(): " << all_loaded_params.size() << endl;
+        //cerr << "i: " << i << endl;
         gsparams::DictList::iterator itr = all_loaded_params[i].second->begin();
         int j = 0;
         while(itr!=all_loaded_params[i].second->end()){
+            //cerr << "j: " << j << endl;
+            //cerr << "path_vector[j]: " << path_vector[j] << endl;
+            //cerr << "itr.get_path(): " << itr.get_path() << endl;
             if(0 != path_vector[j].compare(itr.get_path())){
                 /*
                 std::cerr << par_init.my_pars["inter"] << std::endl;
@@ -739,8 +760,7 @@ int main( int argc, char* argv[] )
             j++;
         }
     }
-
-
+    cerr << "after making pairs" << endl;
 
 
 
@@ -752,8 +772,9 @@ int main( int argc, char* argv[] )
     gsl_rng_set( rng, initialSeed );                // set the seed equal to simulTime(0)
 
     // model fitting
-
+    cerr << "before train" << endl;
     predictor->train( par_init, rng );
+    cerr << "after train" << endl;
 
     gsl_rng_free( rng );
     // print the training results

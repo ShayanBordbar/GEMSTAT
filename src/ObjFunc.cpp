@@ -483,7 +483,68 @@ void Fold_Change_ObjFunc::read_treat_control_file(string filename){
 
   }
 
+  double logistic_classifier::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
+  const ExprPar* par){
+        //FOR DEBUG
+    cerr << "HELLO FROM THE logistic_classifier objective" << endl;
+    assert(ground_truth.size() == prediction.size());
+    int nSeqs = ground_truth.size();
+    int nConds = ground_truth[0].size();
+    double totalLL = 0.0;
+    //double cur_comp;
+    double bias = par->getLogReg_Bias();
+    double coeff = par->getLogReg_Coeff();
+    for(int i = 0;i<ground_truth.size();i++){
+      vector<double> Y = ground_truth[i];
+      vector<double> Ypred = prediction[i];
+      double one_sequence_LL = 0.0;
+      for(int j = 0;j<Y.size();j++){
+        double cur_lab = (2 * Y[j]) - 1;
+        double cur_pred = Ypred[j];
+        //if (cur_lab == 1){
+          //cur_comp = 0;
+        //}else if(cur_lab == 0){
+          //cur_comp = 1;
+        //}
+        double cur_LL = log(1 + exp( -1.0 * cur_lab * coeff * (cur_pred - bias) ));
+        one_sequence_LL += cur_LL;
+      }
+      totalLL += one_sequence_LL;
+    }
+    return totalLL;
+  }
 
+  double Weighted_logistic_classifier::eval(const vector<vector<double> >& ground_truth, const vector<vector<double> >& prediction,
+  const ExprPar* par){
+    //cerr << "HELLO FROM THE Weighted_logistic_classifier objective" << endl;
+    assert(ground_truth.size() == prediction.size());
+    int nSeqs = ground_truth.size();
+    int nConds = ground_truth[0].size();
+    double totalLL = 0.0;
+    //double cur_comp;
 
+    double bias = par->getLogReg_Bias();
+    double coeff = par->getLogReg_Coeff();
+    //cerr << "HELLO FROM THE Weighted_logistic_classifier objective" << " bias " << bias << " coeff " << coeff << endl;
+    for(int i = 0;i<ground_truth.size();i++){
+      vector<double> Y = ground_truth[i];
+      vector<double> Ypred = prediction[i];
+      double one_sequence_LL = 0.0;
+      for(int j = 0;j<Y.size();j++){
+        double cur_lab = (2 * Y[j]) - 1;
+        double cur_pred = Ypred[j];
+        cout << "label: " << Y[j] << " Prediction: " << cur_pred << endl;
+        //if (cur_lab == 1){
+          //cur_comp = 0;
+        //}else if(cur_lab == 0){
+          //cur_comp = 1;
+        //}
+        double cur_LL = weights->getElement(i,j) * log(1 + exp( -1.0 * cur_lab * coeff * (cur_pred - bias) ));
+        one_sequence_LL += cur_LL;
+      }
+      totalLL += one_sequence_LL;
+    }
+    return totalLL;
+  }
 
 

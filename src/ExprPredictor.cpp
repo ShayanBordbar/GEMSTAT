@@ -123,20 +123,28 @@ double ExprPredictor::objFunc( const ExprPar& par )
 int ExprPredictor::train( const ExprPar& par_init )
 {
     par_model = par_init;
-
+    
+    cerr << " started in training" << endl;
+    
     cout << "*** Diagnostic printing BEFORE adjust() ***" << endl;
     cout << "Parameters: " << endl;
+    cerr << " before PrintPar" << endl;
     printPar( par_model );
+    cerr << " after PrintPar" << endl;
     cout << endl;
+
     cout << "Objective function value: " << objFunc( par_model ) << endl;
     cout << "*******************************************" << endl << endl;
 
+    cerr << " after objFunc" << endl;
     if ( n_alternations > 0 && this->search_option == CONSTRAINED ){
       par_model = param_factory->truncateToBounds(par_model, indicator_bool);
 
     }
+    cerr << " after truncateToBounds" << endl;
     obj_model = objFunc( par_model );
 
+    cerr << " after objFunc second" << endl;
     cout << "*** Diagnostic printing AFTER adjust() ***" << endl;
     cout << "Parameters: " << endl;
     printPar( par_model );
@@ -153,12 +161,15 @@ int ExprPredictor::train( const ExprPar& par_init )
 
     for ( int i = 1; i <= n_alternations; i++ )
     {
+        cerr << " began training, i is: " << i << endl;
 		this->begin_epoch(i);
+        cerr << " begin_epoch  " << endl;
         simplex_minimize( par_result, obj_result );
         par_model = par_result;
-
+        cerr << " after simplex " << endl;
         gradient_minimize( par_result, obj_result );
         par_model = par_result;
+        cerr << " after gradient_minimize " << endl;
     }
 
     #ifdef BETAOPTBROKEN
@@ -170,7 +181,7 @@ int ExprPredictor::train( const ExprPar& par_init )
     // commit the parameters and the value of the objective function
     //par_model = par_result;
     obj_model = obj_result;
-
+    cerr << " after end_training" << endl;
     return 0;
 }
 
@@ -392,8 +403,8 @@ int ExprPredictor::simplex_minimize( ExprPar& par_result, double& obj_result )
 
     pars.clear();
     pars = free_pars;
-    cout << "number of free parameters: "<< pars.size() << endl;
-    cout << "number of fix parameters: "<< fix_pars.size() << endl;
+    cerr << "number of free parameters: "<< pars.size() << endl;
+    cerr << "number of fix parameters: "<< fix_pars.size() << endl;
 
     //SIMPLEX MINIMIZATION with NLOPT
     nlopt::opt optimizer(nlopt::LN_NELDERMEAD, pars.size());
@@ -405,17 +416,26 @@ int ExprPredictor::simplex_minimize( ExprPar& par_result, double& obj_result )
       vector<double> free_mins;
       vector<double> fix_mins;
 
+
       param_factory->separateParams(param_factory->getMinimums(), free_mins, fix_mins, indicator_bool);
       optimizer.set_lower_bounds(free_mins);
-
+      cerr << "free_mins size: "<< free_mins.size() <<endl;
+      cerr << free_mins << endl;
       param_factory->separateParams(param_factory->getMaximums(), free_mins, fix_mins, indicator_bool);
+      cerr << "free_max size: "<< free_mins.size() <<endl;
       optimizer.set_upper_bounds(free_mins);
+      cerr << free_mins << endl;
+      cerr << "after set_lower_bounds, set_upper_bounds  "<< endl;
     }
-    cout << "before minimization: "<< endl;
+    cerr << "free_pars: "<< endl;
+    cerr << free_pars << endl;
+    cerr << "before minimization: "<< endl;
+
 
     nlopt::result result = optimizer.optimize(free_pars, obj_result);
+    cerr << "after optimize: "<< endl;
     obj_result = optimizer.last_optimum_value();
-    cout << "after minimization: "<< endl;
+    
     //Done Minimizing
 
     param_factory->joinParams(free_pars, fix_pars, pars, indicator_bool);

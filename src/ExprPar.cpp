@@ -84,6 +84,12 @@ ParFactory::ParFactory( const ExprModel& in_model, int in_nSeqs) : expr_model(in
 
       the_params["enh"].push_back(one_scale);
   }
+  the_params["log_Reg"] = gsparams::DictList();
+  gsparams::DictList two_scale;
+  two_scale["bias"] = -0.69;
+  two_scale["coeff"] = 1;
+  the_params["log_Reg"].push_back(two_scale);
+
   this->prototype = the_params;
   //Done with prototype
 
@@ -149,28 +155,52 @@ ExprPar ParFactory::truncateToBounds(const ExprPar& in_par, const vector<bool>& 
   //otherwise, only those for which indicator_bool is true shall be.
   vector<bool> use_indicator_bool = indicator_bool;
   if(use_indicator_bool.empty()){
+    cerr << "use_indicator_bool.empty() is true" << endl;
     vector<double> vector_tmpfoo;
     in_par.getRawPars(vector_tmpfoo);
+    // cout << "in_par" << vector_tmpfoo << endl;
     use_indicator_bool = vector<bool>(true,vector_tmpfoo.size());
   }
 
+  vector<double> vector_tmpfoo;
+  in_par.getRawPars(vector_tmpfoo);
+  // cout << "in_par" << vector_tmpfoo << "size" << vector_tmpfoo.size() <<endl;
+
+  cout << indicator_bool  << "size" << indicator_bool.size() << endl;
   ThermodynamicParameterSpace original_space = in_par.my_space;
+  // cout << "parameterSpaceStr: "<< parameterSpaceStr(original_space) << endl;
 
   vector< double > adjust_free_pars;
   vector< double > adjust_fix_pars;
   vector< double > post_adjust_fix_pars;//Used for penultimate output too
 
   ExprPar tmp_model_es = this->changeSpace(in_par, ENERGY_SPACE);//Be sure we are in the right parameter space
+  // vector<double> aatest1;
+  // tmp_model_es.getRawPars(aatest1);
+  // cout << "aatest1" << aatest1 << "size" << aatest1.size() << endl;
   this->separateParams(tmp_model_es, adjust_free_pars, adjust_fix_pars, use_indicator_bool );
-
+  
   ExprPar tmp_constrained_es = this->changeSpace(
                                   this->changeSpace(tmp_model_es,CONSTRAINED_SPACE),
                                   ENERGY_SPACE);
+  vector<double> aatest2;
+  tmp_constrained_es.getRawPars(aatest2);
+ // cout << "aatest1" << aatest2 << "size" << aatest2.size() << endl;
+
   this->separateParams(tmp_constrained_es, adjust_free_pars, post_adjust_fix_pars, use_indicator_bool);
   this->joinParams(adjust_free_pars, adjust_fix_pars, post_adjust_fix_pars, use_indicator_bool);
 
   ExprPar final_return = this->create_expr_par(post_adjust_fix_pars, ENERGY_SPACE);
+  // vector<double> aatest3;
+  // final_return.getRawPars(aatest3);
+  // cout << "aatest3" << aatest3 << "size" << aatest3.size() << endl;
+
   final_return = this->changeSpace(final_return, original_space);
+
+  // vector<double> aatest4;
+  // final_return.getRawPars(aatest4);
+  // cout << "aatest4" << aatest4 << "size" << aatest4.size() << endl;
+
   return final_return;
 }
 
@@ -288,9 +318,11 @@ ExprPar ParFactory::createDefaultFreeFix() const
 ExprPar ParFactory::create_expr_par() const
 {
   ExprPar tmp_par = ExprPar(expr_model.getNFactors(), this->nSeqs);
-
+  
   tmp_par.my_space = ENERGY_SPACE;
   tmp_par.my_factory = this;
+
+ 
   tmp_par.my_pars = gsparams::DictList(this->prototype);
   return tmp_par;
 }
@@ -300,9 +332,18 @@ ExprPar ParFactory::create_expr_par(const vector<double>& pars, const Thermodyna
       //TODO: Most of this code can be further simplified by using the STL vector's nice functions.
 
       ExprPar tmp_par = this->create_expr_par();
+      // vector<double> aatest10;
+      // tmp_par.getRawPars(aatest10);
+      // cout << "TMP-PARS-BEFORE: " << endl << aatest10 << endl  << "size: " << aatest10.size() << endl;
 
+
+      // cout << "INPUT PARS" << endl << pars << endl << "size: " << pars.size() << endl;
       tmp_par.my_space = in_space;
       tmp_par.my_pars.populate(pars);
+
+      // vector<double> aatest12;
+      // tmp_par.getRawPars(aatest12);
+      // cout << "TMP-PARS-AFTER: " << endl << aatest12 << endl << "size: " << aatest12.size() << endl;
 
       return tmp_par;
 }
@@ -333,27 +374,44 @@ ExprPar ParFactory::changeSpace(const ExprPar& in_par, const ThermodynamicParame
   in_par.getRawPars(original_pars );
 
   if(in_par.my_space == CONSTRAINED_SPACE){
+    // vector<double> aatest5;
+    // in_par.getRawPars(aatest5);
+    // cout << "CONSTRAINED_SPACE_before" << endl << aatest5 << endl << "size: " << aatest5.size() << endl;
     constrained_to_energy_helper(original_pars, as_energy_space,low_vect, high_vect);
+    cout << "CONSTRAINED_SPACE_to_Energy_after" << endl << as_energy_space << endl << "size: " << as_energy_space.size() << endl;
   }else if(in_par.my_space == PROB_SPACE){//Inputs were in the PROB_SPACE
+    // vector<double> aatest5;
+    // in_par.getRawPars(aatest5);
+    // cout << "prob_space_before" << endl << aatest5 << endl << "size: " << aatest5.size() << endl;
     prob_to_energy_helper(original_pars, as_energy_space);
+    // cout << "prob_to_energy_space_after" << endl << as_energy_space << endl << "size: " << as_energy_space.size() << endl;
+
   }else{ // Intputs were in ENERGY_SPACE
     as_energy_space = original_pars;
   }
 
   //Now convert that into whichever the target parameter space was.
   if(new_space == ENERGY_SPACE){
+    // ExprPar aatest6 = create_expr_par(as_energy_space,ENERGY_SPACE);
+    // vector<double> aatest7;
+    // aatest6.getRawPars(aatest7);
+    // cout << "aatest7" << aatest7 << "size" << aatest7.size() << endl;
     return create_expr_par(as_energy_space,ENERGY_SPACE);
   }
 
   if(new_space == PROB_SPACE){
     vector<double> as_prob_space;
     energy_to_prob_helper(as_energy_space,as_prob_space);
+    // cout << "after_going_from_energy_to_prob" << endl << as_prob_space << endl << "size: " << as_prob_space.size() << endl;
+
     return create_expr_par(as_prob_space,PROB_SPACE);
   }
 
   if(new_space == CONSTRAINED_SPACE){
     vector<double> as_constrained;
     energy_to_constrained_helper(as_energy_space, as_constrained, low_vect, high_vect);
+    // cout << "after_going_from_energy_to_constrained" << endl << as_constrained << endl << "size: " << as_constrained.size() << endl;
+
     return create_expr_par(as_constrained, CONSTRAINED_SPACE);
   }
 
@@ -826,6 +884,16 @@ GEMSTAT_PAR_FLOAT_T ExprPar::getBetaForSeq(int enhancer_ID) const {
     int use_enhancerID = (this->my_factory->expr_model.shared_scaling ? 0 : enhancer_ID);
     return ((gsparams::DictList&)this->my_pars)["enh"][ use_enhancerID ]["beta"];
 }
+GEMSTAT_PAR_FLOAT_T ExprPar::getLogReg_Bias() const {
+  cerr << "getting bias"  << endl;
+    return ((gsparams::DictList&)this->my_pars)["log_Reg"][0]["bias"];
+}
+GEMSTAT_PAR_FLOAT_T ExprPar::getLogReg_Coeff() const {
+  cerr << "getting coeff"  << endl;
+    return ((gsparams::DictList&)this->my_pars)["log_Reg"][0]["coeff"];
+}
+
+
 
 GEMSTAT_PROMOTER_DATA_T ExprPar::getPromoterData(int enhancer_ID) const {
     GEMSTAT_PROMOTER_DATA_T the_return_value;

@@ -57,6 +57,8 @@ class ExprPar
         }
 
         GEMSTAT_PAR_FLOAT_T getBetaForSeq(int enhancer_ID) const; //Returns the appropriate value of beta for this sequence. This allows some sequences to share one beta value, while others share another, or each have their own.
+        GEMSTAT_PAR_FLOAT_T getLogReg_Bias() const;
+        GEMSTAT_PAR_FLOAT_T getLogReg_Coeff() const;
 
         GEMSTAT_PROMOTER_DATA_T getPromoterData(int enhancer_ID) const;
 
