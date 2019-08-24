@@ -166,7 +166,7 @@ ExprPar ParFactory::truncateToBounds(const ExprPar& in_par, const vector<bool>& 
   in_par.getRawPars(vector_tmpfoo);
   // cout << "in_par" << vector_tmpfoo << "size" << vector_tmpfoo.size() <<endl;
 
-  cout << indicator_bool  << "size" << indicator_bool.size() << endl;
+  //cout << indicator_bool  << "size" << indicator_bool.size() << endl;
   ThermodynamicParameterSpace original_space = in_par.my_space;
   // cout << "parameterSpaceStr: "<< parameterSpaceStr(original_space) << endl;
 
@@ -378,7 +378,7 @@ ExprPar ParFactory::changeSpace(const ExprPar& in_par, const ThermodynamicParame
     // in_par.getRawPars(aatest5);
     // cout << "CONSTRAINED_SPACE_before" << endl << aatest5 << endl << "size: " << aatest5.size() << endl;
     constrained_to_energy_helper(original_pars, as_energy_space,low_vect, high_vect);
-    cout << "CONSTRAINED_SPACE_to_Energy_after" << endl << as_energy_space << endl << "size: " << as_energy_space.size() << endl;
+    //cout << "CONSTRAINED_SPACE_to_Energy_after" << endl << as_energy_space << endl << "size: " << as_energy_space.size() << endl;
   }else if(in_par.my_space == PROB_SPACE){//Inputs were in the PROB_SPACE
     // vector<double> aatest5;
     // in_par.getRawPars(aatest5);
@@ -885,11 +885,11 @@ GEMSTAT_PAR_FLOAT_T ExprPar::getBetaForSeq(int enhancer_ID) const {
     return ((gsparams::DictList&)this->my_pars)["enh"][ use_enhancerID ]["beta"];
 }
 GEMSTAT_PAR_FLOAT_T ExprPar::getLogReg_Bias() const {
-  cerr << "getting bias"  << endl;
+  //cerr << "getting bias"  << endl;
     return ((gsparams::DictList&)this->my_pars)["log_Reg"][0]["bias"];
 }
 GEMSTAT_PAR_FLOAT_T ExprPar::getLogReg_Coeff() const {
-  cerr << "getting coeff"  << endl;
+  //cerr << "getting coeff"  << endl;
     return ((gsparams::DictList&)this->my_pars)["log_Reg"][0]["coeff"];
 }
 

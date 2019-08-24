@@ -128,23 +128,23 @@ int ExprPredictor::train( const ExprPar& par_init )
     
     cout << "*** Diagnostic printing BEFORE adjust() ***" << endl;
     cout << "Parameters: " << endl;
-    cerr << " before PrintPar" << endl;
+    //cerr << " before PrintPar" << endl;
     printPar( par_model );
-    cerr << " after PrintPar" << endl;
+    //cerr << " after PrintPar" << endl;
     cout << endl;
 
     cout << "Objective function value: " << objFunc( par_model ) << endl;
     cout << "*******************************************" << endl << endl;
 
-    cerr << " after objFunc" << endl;
+    //cerr << " after objFunc" << endl;
     if ( n_alternations > 0 && this->search_option == CONSTRAINED ){
       par_model = param_factory->truncateToBounds(par_model, indicator_bool);
 
     }
-    cerr << " after truncateToBounds" << endl;
+    //cerr << " after truncateToBounds" << endl;
     obj_model = objFunc( par_model );
 
-    cerr << " after objFunc second" << endl;
+    //cerr << " after objFunc second" << endl;
     cout << "*** Diagnostic printing AFTER adjust() ***" << endl;
     cout << "Parameters: " << endl;
     printPar( par_model );

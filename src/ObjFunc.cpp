@@ -533,7 +533,7 @@ void Fold_Change_ObjFunc::read_treat_control_file(string filename){
       for(int j = 0;j<Y.size();j++){
         double cur_lab = (2 * Y[j]) - 1;
         double cur_pred = Ypred[j];
-        cout << "label: " << Y[j] << " Prediction: " << cur_pred << endl;
+        //cout << "label: " << Y[j] << " Prediction: " << cur_pred << endl;
         //if (cur_lab == 1){
           //cur_comp = 0;
         //}else if(cur_lab == 0){
